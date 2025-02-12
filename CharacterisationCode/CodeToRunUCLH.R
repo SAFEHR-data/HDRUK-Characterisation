@@ -1,6 +1,8 @@
 
 renv::restore()
 
+## START OF SETTINGS copied between benchmarking, characterisation & antibiotics study
+
 # acronym to identify the database
 # beware dbName identifies outputs, dbname is UCLH db
 # here different outputs can be created for each UCLH schema which is a different omop extract
@@ -15,8 +17,8 @@ renv::restore()
 # cdmSchema <- "data_catalogue_003" #6 months
 # put brief progress here
 
-# dbName <- "UCLH-2years"
-# cdmSchema <- "data_catalogue_004" #2 years
+dbName <- "UCLH-2years"
+cdmSchema <- "data_catalogue_004" #2 years
 # put brief progress here
 
 # create a DBI connection to UCLH database
@@ -25,12 +27,15 @@ user <- Sys.getenv("user")
 host <- Sys.getenv("host")
 port <- Sys.getenv("port")
 dbname <- Sys.getenv("dbname")
+pwd <- Sys.getenv("pwd")
 # schema in database where you have writing permissions
 writeSchema <- "_other_andsouth"
 
-if("" %in% c(user, host, port, dbname, writeSchema))
+if("" %in% c(user, host, port, dbname, pwd, writeSchema))
   stop("seems you don't have (all?) db credentials stored in your .Renviron file, use usethis::edit_r_environ() to create")
-pwd <- rstudioapi::askForPassword("Password for omop_db")
+
+#now pwd got from .Renviron
+#pwd <- rstudioapi::askForPassword("Password for omop_db")
 
 
 con <- DBI::dbConnect(RPostgres::Postgres(),user = user, host = host, port = port, dbname = dbname, password=pwd)
@@ -53,5 +58,13 @@ cdm <- CDMConnector::cdmFromCon(
   cdmName = dbName,
   .softValidation = TRUE
 )
+
+# 2025-02-04
+# a patch to cope with records where drug_exposure_start_date > drug_exposure_end_date
+# this causes error in benchmarking with 2 year extract (only 577 rows)
+cdm$drug_exposure <- cdm$drug_exposure |> dplyr::filter(drug_exposure_start_date <= drug_exposure_end_date)
+
+
+## END OF SETTINGS copied between benchmarking, characterisation & antibiotics study
 
 source("RunCharacterisation.R")
