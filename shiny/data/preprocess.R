@@ -3,7 +3,6 @@ resultList <- list(
   "summarise_omop_snapshot" ,
   "summarise_characteristics",
   "summarise_missing_data" ,
-  "summarise_concept_id_counts",
   "summarise_clinical_records" ,
   "summarise_record_count" ,
   "summarise_in_observation" ,
@@ -16,24 +15,22 @@ data_path <- file.path(getwd(), "data")
 csv_files <- list.files(data_path, pattern = "\\.csv$", full.names = TRUE)
 
 result <- purrr::map(csv_files, \(x){
-  d <- omopgenerics::importSummarisedResult(x)
-  attr(d, "settings") <- attr(d, "settings")|>dplyr::mutate(result_type = dplyr::if_else(.data$result_type == "summarise_all_concept_counts", "summarise_concept_id_counts", .data$result_type))
-  d
+  omopgenerics::importSummarisedResult(x)
 }) |> 
-  dplyr::bind_rows() |>
+  omopgenerics::bind() |>
   omopgenerics::newSummarisedResult()
 
 # result <- omopgenerics::importSummarisedResult(file.path(getwd(), "data"))
 resultList <- resultList |>
   purrr::map(\(x) {
     omopgenerics::settings(result) |>
-  dplyr::filter(.data$result_type %in% .env$x) |>
-  dplyr::pull(.data$result_id) }) |>
+      dplyr::filter(.data$result_type %in% .env$x) |>
+      dplyr::pull(.data$result_id) }) |>
   rlang::set_names(resultList)
 data <- prepareResult(result, resultList)
+
 filterValues <- defaultFilterValues(result, resultList)
 
 save(data, filterValues, file = file.path(getwd(), "data", "shinyData.RData"))
 
 rm(result, filterValues, resultList, data)
-

@@ -32,7 +32,7 @@ server <- function(input, output, session) {
   
   
   # summarise_characteristics -----
-  
+ 
   createOutput7 <- shiny::reactive({
     result <- data |>
       filterData("summarise_characteristics", input)
@@ -67,12 +67,23 @@ server <- function(input, output, session) {
     result <- data |>
       filterData("summarise_characteristics", input)
     result <- result |> dplyr::filter(.data$variable_name == input$summarise_characteristics_ggplot2_8_variableName)
-    plot <- CohortCharacteristics::plotCharacteristics(
-      result,
-      plotStyle = input$summarise_characteristics_ggplot2_8_plotStyle,
-      facet = input$summarise_characteristics_ggplot2_8_facet,
-      colour = input$summarise_characteristics_ggplot2_8_colour
-    ) + ggplot2::theme(axis.text.x = element_text(angle = 90, hjust = 1))
+    if (input$summarise_characteristics_ggplot2_8_plotStyle == "densityplot"){
+      plot <- visOmopResults::scatterPlot(result, 
+                                          x = "density_x",
+                                          y = "density_y",
+                                          line = TRUE,
+                                          point = FALSE,
+                                          ribbon = FALSE,
+                                          facet = input$summarise_characteristics_ggplot2_8_facet,
+                                          colour = input$summarise_characteristics_ggplot2_8_colour)
+    } else {
+      plot <- CohortCharacteristics::plotCharacteristics(
+        result,
+        plotStyle = input$summarise_characteristics_ggplot2_8_plotStyle,
+        facet = input$summarise_characteristics_ggplot2_8_facet,
+        colour = input$summarise_characteristics_ggplot2_8_colour
+      ) }
+    plot <- plot + ggplot2::theme(axis.text.x = element_text(angle = 90, hjust = 1))
     if (input$summarise_characteristics_ggplot2_8_logscale) {
       plot <- plot + ggplot2::scale_y_log10()
     }
@@ -173,82 +184,6 @@ server <- function(input, output, session) {
   #   }
   # )
   
-  
-  # summarise_concept_id_counts -----
-  ## tidy summarise_concept_id_counts -----
-  getTidyDataSummariseAllConceptCounts <- shiny::reactive({
-    res <- data |>
-      filterData("summarise_concept_id_counts", input) |>
-      omopgenerics::addSettings() |>
-      omopgenerics::splitAll() |>
-      dplyr::select(!"result_id")|>
-      dplyr::mutate(estimate_value = suppressWarnings(dplyr::if_else(.data$estimate_value == "-", NA_integer_, as.numeric(.data$estimate_value))))
-    
-    
-    # columns to eliminate
-    colsEliminate <- colnames(res)
-    colsEliminate <- colsEliminate[!colsEliminate %in% c(
-      input$summarise_concept_id_counts_tidy_columns, "variable_name", "variable_level",
-      "estimate_name", "estimate_type", "estimate_value"
-    )]
-    
-    # pivot
-    pivot <- input$summarise_concept_id_counts_tidy_pivot
-    if (pivot != "none") {
-      vars <- switch(pivot,
-                     "estimates" = "estimate_name"
-      )
-      res <- res |> 
-        visOmopResults::pivotEstimates(pivotEstimatesBy = vars)
-    } 
-    
-    res |>
-      dplyr::select(!dplyr::all_of(colsEliminate))
-  })
-  output$summarise_concept_id_counts_tidy <- DT::renderDT({
-    DT::datatable(
-      getTidyDataSummariseAllConceptCounts(),
-      options = list(scrollX = TRUE),
-      rownames = FALSE
-    )
-  })
-  output$summarise_concept_id_counts_tidy_download <- shiny::downloadHandler(
-    filename = "tidy_summarise_concept_id_counts.csv",
-    content = function(file) {
-      getTidyDataSummariseAllConceptCounts() |>
-        readr::write_csv(file = file)
-    }
-  )
-  # ## output summarise_concept_id_counts -----
-  # ## output 0 -----
-  # createOutput27 <- shiny::reactive({
-  #   result <- data |>
-  #     filterData("summarise_concept_id_counts", input)
-  #   header <- input$summarise_concept_id_counts_gt_0_header
-  #   group <- input$summarise_concept_id_counts_gt_0_group
-  #   hide <- input$summarise_concept_id_counts_gt_0_hide
-  #   
-  #   if (is.null(header) || length(header) == 0) header <- c("cdm_name")
-  #   if (is.null(group) || length(group) == 0) group <- c("omop_table","year")
-  #   if (is.null(hide) || length(hide) == 0) hide <- c("study_period_end",	"study_period_start")
-  #   simpleTable(
-  #     result,
-  #     header = header,
-  #     group = group,
-  #     hide = hide
-  #   )
-  # })
-  # output$summarise_concept_id_counts_gt_0 <- gt::render_gt({
-  #   createOutput27()
-  # })
-  # output$summarise_concept_id_counts_gt_0_download <- shiny::downloadHandler(
-  #   filename = paste0("output_gt_summarise_concept_id_counts.", input$summarise_concept_id_counts_gt_0_download_type),
-  #   content = function(file) {
-  #     obj <- createOutput27()
-  #     gt::gtsave(data = obj, filename = file)
-  #   }
-  # )
-  
   getTidyDataSummariseClinicalRecords <- shiny::reactive({
     res <- data |>
       filterData("summarise_clinical_records", input) |>
@@ -291,8 +226,8 @@ server <- function(input, output, session) {
         readr::write_csv(file = file)
     }
   )  
-  
-  
+
+ 
   createOutput21 <- shiny::reactive({
     res <- data |>
       filterData("summarise_clinical_records", input)
@@ -313,7 +248,7 @@ server <- function(input, output, session) {
   
   
   
-  
+
   ## output summarise_record_count -----
   ## output 0 -----
   createOutput23 <- shiny::reactive({
@@ -348,17 +283,17 @@ server <- function(input, output, session) {
   createOutput18 <- shiny::reactive({
     result <- data |>
       filterData("summarise_record_count", input)
-    plot <- OmopSketch::plotRecordCount(
+   plot <- OmopSketch::plotRecordCount(
       result,
       facet = input$summarise_record_count_ggplot2_16_facet, 
       colour = input$summarise_record_count_ggplot2_16_colour
     )
-    if (input$summarise_record_count_ggplot2_16_logscale) {
-      plot <- plot + ggplot2::scale_y_log10()
-    }
-    
-    plot
-    
+   if (input$summarise_record_count_ggplot2_16_logscale) {
+     plot <- plot + ggplot2::scale_y_log10()
+   }
+   
+   plot
+   
   })
   output$summarise_record_count_ggplot2_16 <- shiny::renderPlot({
     createOutput18()
