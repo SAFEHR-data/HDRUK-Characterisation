@@ -15,10 +15,10 @@ data_path <- file.path(getwd(), "data")
 csv_files <- list.files(data_path, pattern = "\\.csv$", full.names = TRUE)
 
 result <- purrr::map(csv_files, \(x){
-  omopgenerics::importSummarisedResult(x)
+  utils::read.csv(x) |> 
+    omopgenerics::newSummarisedResult()
 }) |> 
-  omopgenerics::bind() |>
-  omopgenerics::newSummarisedResult()
+  omopgenerics::bind()
 
 # result <- omopgenerics::importSummarisedResult(file.path(getwd(), "data"))
 resultList <- resultList |>
@@ -30,6 +30,24 @@ resultList <- resultList |>
 data <- prepareResult(result, resultList)
 
 filterValues <- defaultFilterValues(result, resultList)
+
+data$summarise_missing_data <- data$summarise_missing_data |>
+  omopgenerics::splitAll() |>
+  dplyr::rename("column_name" = "variable_name") |>
+  dplyr::mutate(
+    interval = dplyr::if_else(
+      .data$year == "overall" & .data$time_interval == "overall",
+      "overall",
+      dplyr::if_else(
+        .data$year != "overall",
+        .data$year,
+        substr(.data$time_interval, 1, 4)
+      )
+    )
+  ) |> dplyr::select(!c("time_interval", "year"))
+
+filterValues$summarise_missing_data_grouping_interval <- unique(data$summarise_missing_data$interval)
+filterValues$summarise_missing_data_tidy_columns <- c("cdm_name",	"omop_table",	"age_group","sex",	"interval",	"column_name")
 
 save(data, filterValues, file = file.path(getwd(), "data", "shinyData.RData"))
 

@@ -315,9 +315,9 @@ ui <- bslib::page_navbar(
                               options = list(`actions-box` = TRUE, size = 10, `selected-text-format` = "count > 3")
                             ),
                             shinyWidgets::pickerInput(
-                              inputId = "summarise_missing_data_grouping_time_interval",
-                              label = "Time interval",
-                              choices = filterValues$summarise_missing_data_grouping_time_interval,
+                              inputId = "summarise_missing_data_grouping_interval",
+                              label = "Year",
+                              choices = filterValues$summarise_missing_data_grouping_interval,
                               selected = "overall",
                               multiple = TRUE,
                               options = list(`actions-box` = TRUE, size = 10, `selected-text-format` = "count > 3")
@@ -327,7 +327,7 @@ ui <- bslib::page_navbar(
                             title = "Variables",
                             shinyWidgets::pickerInput(
                               inputId = "summarise_missing_data_variable_name",
-                              label = "Variable name",
+                              label = "Column name",
                               choices = filterValues$summarise_missing_data_variable_name,
                               selected = filterValues$summarise_missing_data_variable_name,
                               multiple = TRUE,
@@ -365,7 +365,7 @@ ui <- bslib::page_navbar(
                                   inputId = "summarise_missing_data_tidy_columns",
                                   label = "Columns",
                                   choices = filterValues$summarise_missing_data_tidy_columns,
-                                  selected = c("cdm_name",	"omop_table",	"age_group","sex",	"time_interval",	"variable_name",	"estimate_name", "estimate_value"),
+                                  selected = c("cdm_name",	"omop_table",	"age_group","sex",	"interval",	"column_name",	"estimate_name", "estimate_value"),
                                   multiple = TRUE,
                                   options = list(`actions-box` = TRUE, size = 10, `selected-text-format` = "count > 3")
                                 ),

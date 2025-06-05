@@ -112,20 +112,16 @@ server <- function(input, output, session) {
   # summarise_missing_data -----
   ## tidy summarise_missing_data -----
   getTidyDataSummariseMissingData <- shiny::reactive({
-    res <- data |>
-      filterData("summarise_missing_data", input) |>
-      omopgenerics::addSettings() |>
-      omopgenerics::splitAll() |>
-      dplyr::select(!"result_id")|>
-      dplyr::mutate(estimate_value = suppressWarnings(dplyr::if_else(.data$estimate_value == "-", NA_integer_, as.numeric(.data$estimate_value))))
-    
-    # columns to eliminate
-    colsEliminate <- colnames(res)
-    colsEliminate <- colsEliminate[!colsEliminate %in% c(
-      input$summarise_missing_data_tidy_columns, "variable_name",
-      "estimate_name", "estimate_value"
-    )]
-    
+    res <- data$summarise_missing_data |>
+      dplyr::filter(
+        .data$cdm_name %in% input$summarise_missing_data_grouping_cdm_name,
+        .data$omop_table %in% input$summarise_missing_data_grouping_omop_table,
+        .data$age_group %in% input$summarise_missing_data_grouping_age_group,
+        .data$sex %in% input$summarise_missing_data_grouping_sex,
+        .data$interval %in% input$summarise_missing_data_grouping_interval, 
+        .data$estimate_name %in% input$summarise_missing_data_estimate_name,
+        .data$column_name %in% input$summarise_missing_data_variable_name
+      ) 
     # pivot
     pivot <- input$summarise_missing_data_tidy_pivot
     if (pivot != "none") {
@@ -136,8 +132,9 @@ server <- function(input, output, session) {
         visOmopResults::pivotEstimates(pivotEstimatesBy = vars)
     } 
     
-    res |>
-      dplyr::select(!dplyr::any_of(colsEliminate))
+    res |> 
+      dplyr::select(dplyr::any_of(c(input$summarise_missing_data_tidy_columns, input$summarise_missing_data_estimate_name)))
+    
   })
   output$summarise_missing_data_tidy <- DT::renderDT({
     DT::datatable(
@@ -323,7 +320,7 @@ server <- function(input, output, session) {
     
     header<-c("cdm_name")
     group <- c("time_interval")
-    hide <- c("omop_table", "interval",	"study_period_end",	"study_period_start", "variable_level","estimate_name" )
+    hide <- c("omop_table", "interval",	"study_period_end",	"study_period_start", "variable_level" )
     simpleTable(
       result,
       header = header,
