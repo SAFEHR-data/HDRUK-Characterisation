@@ -25,9 +25,14 @@ resultList <- resultList |>
       dplyr::filter(.data$result_type %in% .env$x) |>
       dplyr::pull(.data$result_id) }) |>
   rlang::set_names(resultList)
+
 data <- prepareResult(result, resultList)
 
 filterValues <- defaultFilterValues(result, resultList)
+
+filterValues$summarise_concept_id_counts_variable_name <- NULL
+
+rm(result)
 
 data$summarise_concept_id_counts <- data$summarise_concept_id_counts |>
   omopgenerics::tidy() |>
@@ -47,8 +52,7 @@ data$summarise_concept_id_counts <- data$summarise_concept_id_counts |>
 
 filterValues$summarise_concept_id_counts_grouping_interval <- unique(data$summarise_concept_id_counts$interval)
 
-filterValues$summarise_concept_id_counts_variable_name <- NULL
 
 save(data, filterValues, file = file.path(getwd(), "data", "shinyData.RData"))
 
-rm(result, filterValues, resultList, data)
+rm(filterValues, resultList, data)

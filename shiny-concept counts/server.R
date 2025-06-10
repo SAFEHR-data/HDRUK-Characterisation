@@ -37,7 +37,7 @@ server <- function(input, output, session) {
         .data$omop_table %in% input$summarise_concept_id_counts_grouping_omop_table,
         .data$age_group %in% input$summarise_concept_id_counts_grouping_age_group,
         .data$sex %in% input$summarise_concept_id_counts_grouping_sex,
-        (.data$interval %in% input$summarise_concept_id_counts_grouping_interval)
+        .data$interval %in% input$summarise_concept_id_counts_grouping_interval
       )
   })
   output$summarise_concept_id_counts_tidy <- DT::renderDT({

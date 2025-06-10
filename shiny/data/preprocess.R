@@ -16,7 +16,8 @@ csv_files <- list.files(data_path, pattern = "\\.csv$", full.names = TRUE)
 
 result <- purrr::map(csv_files, \(x){
   utils::read.csv(x) |> 
-    omopgenerics::newSummarisedResult()
+    omopgenerics::newSummarisedResult() |>
+    omopgenerics::filterSettings(result_type != "summarise_concept_id_counts")
 }) |> 
   omopgenerics::bind()
 
