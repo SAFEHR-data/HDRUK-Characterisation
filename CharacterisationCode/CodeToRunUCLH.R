@@ -15,9 +15,6 @@ renv::restore()
 # pwd <- Sys.getenv("pwd")
 # writeSchema <- "_other_andsouth"
 
-if("" %in% c(user, host, port, dbname, pwd, writeSchema))
-  stop("seems you don't have (all?) db credentials stored in your .Renviron file, use usethis::edit_r_environ() to create")
-
 # 2025-07-14 trying UDS again
 dbName <- "UCLH-from-2019-uds"
 cdmSchema <- "omop_catalogue_raw"
@@ -28,8 +25,8 @@ dbname <- "uds"
 pwd <- Sys.getenv("pwduds")
 writeSchema <- "omop_catalogue_analyse"
 
-
-#pwduds
+if("" %in% c(user, host, port, dbname, pwd, writeSchema))
+  stop("seems you don't have (all?) db credentials stored in your .Renviron file, use usethis::edit_r_environ() to create")
 
 #pwd <- rstudioapi::askForPassword("Password for omop_db")
 
