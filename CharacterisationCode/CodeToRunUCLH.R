@@ -5,19 +5,31 @@ renv::restore()
 
 ########################
 # omop_reservoir version
-# older extract, but more up to date postgres
 # beware dbName identifies outputs, dbname is UCLH db
-dbName <- "UCLH-from-2019-v2"
-cdmSchema <- "data_catalogue_007" #from 2019
-user <- Sys.getenv("user")
-host <- Sys.getenv("host")
-port <- Sys.getenv("port")
-dbname <- Sys.getenv("dbname")
-pwd <- Sys.getenv("pwd")
-writeSchema <- "_other_andsouth"
+# dbName <- "UCLH-from-2019-v2"
+# cdmSchema <- "data_catalogue_007" #from 2019
+# user <- Sys.getenv("user")
+# host <- Sys.getenv("host")
+# port <- Sys.getenv("port")
+# dbname <- Sys.getenv("dbname")
+# pwd <- Sys.getenv("pwd")
+# writeSchema <- "_other_andsouth"
 
 if("" %in% c(user, host, port, dbname, pwd, writeSchema))
   stop("seems you don't have (all?) db credentials stored in your .Renviron file, use usethis::edit_r_environ() to create")
+
+# 2025-07-14 trying UDS again
+dbName <- "UCLH-from-2019-uds"
+cdmSchema <- "omop_catalogue_raw"
+user <- Sys.getenv("user")
+host <- "uclvldddtaeps02.xuclh.nhs.uk"
+port <- 5432
+dbname <- "uds"
+pwd <- Sys.getenv("pwduds")
+writeSchema <- "omop_catalogue_analyse"
+
+
+#pwduds
 
 #pwd <- rstudioapi::askForPassword("Password for omop_db")
 
@@ -49,6 +61,7 @@ cdm <- CDMConnector::cdmFromCon(
 #to drop tables, beware if no prefix also everything()
 #cdm <- CDMConnector::dropSourceTable(cdm = cdm, name = dplyr::starts_with("hdruk"))
 
+library(dplyr)
 
 # a patch to remove records where drug_exposure_start_date > drug_exposure_end_date
 # ~2.5k rows in 2019 extract
@@ -91,7 +104,7 @@ cdm$drug_exposure        <- cdm$drug_exposure |> filter(! person_id %in% persrem
 # cdm$observation         <- cdm$observation |> filter(! person_id %in% persremove)
 # cdm$measurement         <- cdm$measurement |> filter(! person_id %in% persremove)
 
-cdm$person <- cdm$person |> mutate(location_id = ifelse(is.na(location_id),1,location_id))
+cdm$person <- cdm$person |> dplyr::mutate(location_id = ifelse(is.na(location_id),1,location_id))
 
 #trying compute & save to temporary table (will appear in db with pre) 
 cdm$observation_period <- cdm$observation_period |> 
@@ -108,5 +121,7 @@ cdm$drug_exposure <- cdm$drug_exposure |> dplyr::filter(drug_exposure_start_date
 
 
 ## END OF SETTINGS copied between benchmarking, characterisation & antibiotics study
+characterisation <- TRUE
+conceptCounts <- TRUE
 
 source("RunCharacterisation.R")
